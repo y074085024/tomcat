@@ -1,4 +1,4 @@
-package com.zerone;
+package com.zerone.servlet;
 
 import java.io.IOException;
 import java.io.InputStream;

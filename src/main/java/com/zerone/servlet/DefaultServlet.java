@@ -1,4 +1,4 @@
-package com.zerone;
+package com.zerone.servlet;
 
 import java.io.IOException;
 
@@ -7,11 +7,6 @@ import java.io.IOException;
  * @since 2018/12/21
  */
 public class DefaultServlet extends MyServlet {
-    private static MyServlet instance = new DefaultServlet();
-    private DefaultServlet(){}
-    public static MyServlet getInstance(){
-        return instance;
-    }
     @Override
     public void doGet(MyRequest myRequest, MyResponse myResponse) {
         try {

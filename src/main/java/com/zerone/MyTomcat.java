@@ -1,5 +1,7 @@
 package com.zerone;
 
+import com.zerone.servlet.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,6 +17,7 @@ import java.util.Map;
 public class MyTomcat {
     private int port;
     private Map<String,String> urlServletMap = new HashMap<>();
+    private static final MyServlet defaultServlet = new DefaultServlet();
 
     public MyTomcat(int port) {
         this.port = port;
@@ -72,7 +75,7 @@ public class MyTomcat {
                 myServlet.service(myRequest,myResponse);
             }
             else{
-                DefaultServlet.getInstance().service(myRequest,myResponse);
+                defaultServlet.service(myRequest,myResponse);
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

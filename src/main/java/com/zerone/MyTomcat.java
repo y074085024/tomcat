@@ -5,10 +5,14 @@ import com.zerone.servlet.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author yxl
@@ -25,33 +29,47 @@ public class MyTomcat {
 
     public void start(){
 
+        //初始化url与servlet类映射
         initServletMapping();
 
-        ServerSocket serverSocket = null;
+        ServerSocketChannel serverSocketChannel = null;
         try{
-            serverSocket = new ServerSocket(port);
+            Selector selector = Selector.open();
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.configureBlocking(false);
+            serverSocketChannel.socket().bind(new InetSocketAddress(8080));
+
+            serverSocketChannel.register(selector,SelectionKey.OP_ACCEPT);
             System.out.println("MyTocat is start...");
             while (true){
-                Socket socket = serverSocket.accept();
-                InputStream inputStream = socket.getInputStream();
-                OutputStream outputStream = socket.getOutputStream();
+                selector.select();
+                Set<SelectionKey> selectionKeys = selector.selectedKeys();
+                for(SelectionKey key:selectionKeys){
+                    if(key.isAcceptable()){
+                        ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+                        SocketChannel clientChannel = serverChannel.accept();
+                        clientChannel.configureBlocking(false);
+                        clientChannel.register(selector,SelectionKey.OP_READ);
+                    }
+                    else if(key.isReadable()){
+                        SocketChannel clientChannel = (SocketChannel) key.channel();
+                        MyRequest myRequest = new MyRequest(clientChannel);
+                        MyResponse myResponse = new MyResponse(clientChannel);
 
-                MyRequest myRequest = new MyRequest(inputStream);
-                MyResponse myResponse = new MyResponse(outputStream);
-
-                //请求分发
-                dispatch(myRequest,myResponse);
-
-                socket.close();
+                        //请求分发
+                        dispatch(myRequest,myResponse);
+                    }
+                }
+                selector.selectedKeys().clear();
             }
         }
         catch (IOException e){
             e.printStackTrace();
         }
         finally {
-            if(serverSocket!=null){
+            if(serverSocketChannel!=null){
                 try{
-                    serverSocket.close();
+                    serverSocketChannel.close();
                 }
                 catch (IOException e){
                     e.printStackTrace();

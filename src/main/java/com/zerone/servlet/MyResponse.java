@@ -2,16 +2,18 @@ package com.zerone.servlet;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 
 /**
  * @author yxl
  * @since 2018/12/21
  */
 public class MyResponse {
-    private OutputStream outputStream;
+    private SocketChannel channel;
 
-    public MyResponse(OutputStream outputStream) {
-        this.outputStream = outputStream;
+    public MyResponse(SocketChannel channel) {
+        this.channel = channel;
     }
     public void write(String content) throws IOException {
         StringBuffer httpResponse = new StringBuffer();
@@ -21,7 +23,10 @@ public class MyResponse {
                 .append("<html><body>")
                 .append(content)
                 .append("</body></html>");
-        outputStream.write(httpResponse.toString().getBytes());
-        outputStream.close();
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.put(httpResponse.toString().getBytes());
+        buffer.flip();
+        channel.write(buffer);
+        channel.close();
     }
 }
